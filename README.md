@@ -56,9 +56,9 @@ Tick to process live bookings, leave unchecked to work in sandbox mode and work 
 ### Pluggable Function: tmt_line_item_data filter ###
 If you are not using the WooCommerce Bookings Extension, you will need to add the function `tmt_line_item_data` to your theme's functions.php file. This function must return an array as follows:
 
-* 'line_items': array of line items that make up the booking.
-* 'start_date': valid start date of booking in 'Y-m-d' format.
-* 'end_date': valid end date of booking in 'Y-m-d' format that does not occure before the start dates.
+* `line_items`: array of line items that make up the booking.
+* `start_date`: valid start date of booking in 'Y-m-d' format.
+* `end_date`: valid end date of booking in 'Y-m-d' format that does not occure before the start dates.
 
 **Example:**
 
