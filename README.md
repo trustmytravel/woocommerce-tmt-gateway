@@ -1,5 +1,5 @@
 # woocommerce-tmt-gateway
-[Trust My Travel](https://trustmytravel.com/) payment gateway extension for [WooCommerce](https://woocommerce.com/) on [WordPress](https://wordpress.org/). Allows for placing bookings via Trust My Travel, and refunding.
+[Trust My Travel](https://trustmytravel.com/) payment gateway extension for [WooCommerce](https://woocommerce.com/) on [WordPress](https://wordpress.org/). Allows for placing, and refunding bookings via the Trust My Travel API.
 
 ## Requirements ##
 * WordPress installation.
@@ -17,31 +17,38 @@ As Trust My Travel require a start and end date for bookings placed via their AP
 
 If you do not use the Bookings Extension, and have an alternate means of defining booking start and end dates, you can create your own version of the pluggable function `tmt_line_item_data` (see code examples below).
 
-Trust My Travel offer multiple currency payment (MCP) options to the traveller meaning that you can transact in multiple currencies. On successful completion of an MCP booking, the total and currency of the payment are logged to post meta fields and a message is displayed indicating what the customer paid, and in which currency. Should you wish to override the WooCommerce booking currency and amount with this, you can make use of the woocommerce_tmt_after_successful_payment action (see code examples below).
+Trust My Travel offer multiple currency payment (MCP) options to the traveller meaning that you can transact in multiple currencies. On successful completion of an MCP booking, the total and currency of the payment are logged to post meta fields and a message is displayed indicating what the customer paid, and in which currency. Should you wish to perform more complex actions than this, you can make use of the woocommerce_tmt_after_successful_payment action (see code examples below).
 
 ## Settings ##
 You can find the settings for the TMT Gateway in the "Checkout" section of WooCommerce "Settings":
 yoursite/wp-admin/admin.php?page=wc-settings&tab=checkout&section=tmt
 
 **Enable / Disable**
+
 Check enable to enable the gateway.
 
 **Title**
+
 The title to display on the payment form.
 
 **Credit Card Input CSS**
+
 CSS to be passed to the Spreedly generated credit card input box on the payment form.
 
 **CVV Input CSS**
+
 CSS to be passed to the Spreedly generated CVV input box on the payment form.
 
 **Spreedly Environment Key**
+
 Trust My Travel Spreedly Environment Key. To be supplied by Trust My Travel.
 
 **Trust My Travel Token**
+
 Trust My Travel API Token. To be supplied by Trust My Travel.
 
 **Live Mode**
+
 Tick to process live bookings, leave unchecked to work in sandbox mode and work with test credit card data.
 
 ## Code Examples ##
@@ -49,9 +56,9 @@ Tick to process live bookings, leave unchecked to work in sandbox mode and work 
 ### Pluggable Function: tmt_line_item_data filter ###
 If you are not using the WooCommerce Bookings Extension, you will need to add the function `tmt_line_item_data` to your theme's functions.php file. This function must return an array as follows:
 
-'line_items': array of line items that make up the booking.
-'start_date': valid start date of booking in 'Y-m-d' format.
-'end_date': valid end date of booking in 'Y-m-d' format that does not occure before the start dates.
+* 'line_items': array of line items that make up the booking.
+* 'start_date': valid start date of booking in 'Y-m-d' format.
+* 'end_date': valid end date of booking in 'Y-m-d' format that does not occure before the start dates.
 
 **Example:**
 
@@ -92,7 +99,7 @@ function override_woo( $order_id, $currency, $payment ) {
 add_action( 'woocommerce_tmt_after_successful_payment', 'override_woo', 10, 3 );
 ```
 
-_*There may be implications with other WooCommerce plugins or functionality if you do this. There are also implications to TMT Payment Gateway refund functionality as refunds must be processed in the base currency of the booking._
+<sub>_*There may be implications with other WooCommerce plugins or functionality if you do this. There are also implications to TMT Payment Gateway refund functionality as refunds must be processed in the base currency of the booking._</sub>
 
 ### Action: woocommerce_tmt_after_failed_payment ###
 Whenever a payment attempt fails, this action is available, and has one argument, the order ID, available.
