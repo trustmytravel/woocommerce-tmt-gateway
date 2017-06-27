@@ -360,7 +360,7 @@ class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
 		}
 
 		// Check start and end dates if valid.
-		if ( false === $date_errors && false === $this->start_before_end( $start_date, $end_date ) ) {
+		if ( false === $date_errors && false === $this->is_start_before_end( $start_date, $end_date ) ) {
 			$errors[] = 'Start date is after end date';
 		}
 
@@ -398,13 +398,8 @@ class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
 	 * @param  date $end_date   date in YYYY-MM-DD format.
 	 * @return boolean.
 	 */
-	private function start_before_end( $start_date, $end_date ) {
-
-		$start_date_val = mktime( 0, 0, 0, substr( $start_date, 5, 2 ), substr( $start_date, 8, 2 ), substr( $start_date, 0, 4 ) );
-
-		$end_date_val = mktime( 0, 0, 0, substr( $end_date, 5, 2 ), substr( $end_date, 8, 2 ), substr( $end_date, 0, 4 ) );
-
-		return $end_date_val >= $start_date_val;
+	private function is_start_before_end( $start_date, $end_date ) {
+		return strtotime( $end_date ) >= strtotime( $start_date );
 	}
 
 	/**
