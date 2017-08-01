@@ -123,7 +123,7 @@ class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
 				'label'		=> __( 'Enable Live Mode', 'woocommerce-gateway-tmt' ),
 				'type'		=> 'checkbox',
 				'desc_tip'	=> __( 'Place the payment gateway in live mode.', 'woocommerce-gateway-tmt' ),
-				'default'		=> 'yes',
+				'default'		=> '',
 			],
 		];
 	}
@@ -183,11 +183,21 @@ class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
 			return;
 		}
 
-		$json = wp_remote_retrieve_body( $response );
+		$options = '<option value= "">' . $base_currency . ' ' . $amount . '</option>';
 
+		// If we don't have the currency, we get a 404.
+		if ( '404' === wp_remote_retrieve_response_code( $response ) ) {
+			return $options;
+		}
+
+		// Otherwise parse.
+		$json = wp_remote_retrieve_body( $response );
 		$obj = json_decode( $json );
 
-		$options = '<option value= "">' . $base_currency . ' ' . $amount . '</option>';
+		// Just in case.
+		if ( empty( $obj ) ) {
+			return $options;
+		}
 
 		foreach ( $obj->rates as $currency => $rate ) {
 

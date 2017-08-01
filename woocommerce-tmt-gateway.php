@@ -45,13 +45,13 @@ class Tmt_Woo_Commerce_Gateway {
 
 		// If the parent WC_Payment_Gateway class doesn't exist, WooCommerce is not installed on the site.
 		if ( ! class_exists( 'WC_Payment_Gateway' ) ) {
-			set_transient( 'tmt-woo-admin-notice', 'You need to install <a href="https://woocommerce.com" target="_blank">WooCommerce</a>', 5 );
+			set_transient( 'tmt-woo-admin-notice', 'You need to install WooCommerce', 5 );
 			return;
 		}
 
 		// If the Bookings extension isnt installed, return advisory message.
 		if ( ! class_exists( 'WC_Bookings' ) ) {
-			set_transient( 'tmt-woo-admin-notice', 'We highly recommend using this gateway with the <a href="https://woocommerce.com/products/woocommerce-bookings/" target="_blank">WooCommerce Bookings Extension</a>.', 5 );
+			set_transient( 'tmt-woo-admin-notice', 'We highly recommend using this gateway with the WooCommerce Bookings Extension.', 5 );
 		}
 	}
 
@@ -126,7 +126,7 @@ class Tmt_Woo_Commerce_Gateway {
 		// Check transient, if available display notice.
 		$admin_notice = esc_attr( get_transient( 'tmt-woo-admin-notice' ) );
 
-		if ( false === $admin_notice ) {
+		if ( '' === (string) $admin_notice ) {
 			return;
 		}
 
