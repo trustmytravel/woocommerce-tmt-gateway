@@ -3,7 +3,7 @@
 Plugin Name: Trust My Travel - WooCommerce Gateway
 Plugin URI: https://trustmytravel.com/
 Description: Extends WooCommerce by Adding the Trust My Travel Gateway.
-Version: 1.0.0
+Version: 1.0.1
 Author: Matt Bush
 Author URI: https://trustmytravel.com/
 */
@@ -19,7 +19,7 @@ class Tmt_Woo_Commerce_Gateway {
 	public function __construct() {
 
 		// Constants.
-		define( 'WC_TMT_VERSION', '1.0.0' );
+		define( 'WC_TMT_VERSION', '1.0.1' );
 		define( 'WC_TMT_PLUGIN_PATH', dirname( __FILE__ ) );
 		define( 'WC_TMT_PLUGIN_URL', plugins_url( '', __FILE__ ) );
 

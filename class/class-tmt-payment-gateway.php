@@ -217,10 +217,9 @@ class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
 	 */
 	public function process_payment( $order_id ) {
 
-		global $woocommerce;
+		$order = wc_get_order( $order_id );
 
-		// Get this Order's information so that we know who to charge and how much.
-		$customer_order = new WC_Order( $order_id );
+		$order_data = $order->get_data();
 
 		// Are we testing right now or is it a real transaction?
 		$url = ( 'yes' === $this->environment ) ? 'https://trustmytravel.com' : 'https://staging.trustmytravel.com';
@@ -231,23 +230,23 @@ class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
 
 		// Declare booking data and assign order values.
 		$booking_data = [
-			'firstname'			=> $customer_order->get_billing_first_name(),
-			'surname'				=> $customer_order->get_billing_last_name(),
-			'email'				=> $customer_order->get_billing_email(),
-			'address'				=> $customer_order->get_billing_address_1(),
-			'address2'			=> $customer_order->get_billing_address_2(),
-			'city'				=> $customer_order->get_billing_city(),
-			'state'				=> $customer_order->get_billing_state(),
-			'country'				=> $customer_order->get_billing_country(),
-			'postcode'			=> $customer_order->get_billing_postcode(),
-			'phone'				=> $customer_order->get_billing_phone(),
+			'firstname'			=> $order_data['billing']['first_name'],
+			'surname'				=> $order_data['billing']['last_name'],
+			'email'				=> $order_data['billing']['email'],
+			'address'				=> $order_data['billing']['address_1'],
+			'address2'			=> $order_data['billing']['address_2'],
+			'city'				=> $order_data['billing']['city'],
+			'state'				=> $order_data['billing']['state'],
+			'country'				=> $order_data['billing']['country'],
+			'postcode'			=> $order_data['billing']['postcode'],
+			'phone'				=> $order_data['billing']['phone'],
 			'payment_method_token'	=> filter_input( INPUT_POST, 'payment_method_token' ),
 			'date'				=> $line_item_data['start_date'],
 			'date_end'			=> $line_item_data['end_date'],
-			'currency'			=> $customer_order->get_currency(),
-			'total'				=> $customer_order->get_total(),
+			'currency'			=> $order_data['currency'],
+			'total'				=> $order_data['total'],
 			'line_items'			=> implode( ', ', $line_item_data['line_items'] ),
-			'reference'			=> $customer_order->get_order_number(),
+			'reference'			=> $order_id,
 		];
 
 		// Test for alternate payment values.
@@ -301,20 +300,20 @@ class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
 			}
 
 			// Payment has been successful.
-			$customer_order->add_order_note( $response['response'] );
+			$order->add_order_note( $response['response'] );
 
 			// Mark order as Paid and pass the TMT booking ID.
-			$customer_order->payment_complete( $response['booking_id'] );
+			$order->payment_complete( $response['booking_id'] );
 
 			// Empty the cart (Very important step).
-			$woocommerce->cart->empty_cart();
+			WC()->cart->empty_cart();
 
 			do_action( 'woocommerce_tmt_after_successful_payment', $order_id, $currency, $payment );
 
 			// Redirect to thank you page.
 			return [
 				'result'   => 'success',
-				'redirect' => $this->get_return_url( $customer_order ),
+				'redirect' => $this->get_return_url( $order ),
 			];
 		}
 
@@ -322,7 +321,7 @@ class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
 		wc_add_notice( $response['response'], 'error' );
 
 		// Add note to the order for your reference.
-		$customer_order->add_order_note( 'Error: ' . $response['response'] );
+		$order->add_order_note( 'Error: ' . $response['response'] );
 
 		do_action( 'woocommerce_tmt_after_failed_payment', $order_id );
 	}
