@@ -23,6 +23,33 @@ class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
 	}
 
 	/**
+	 * Order meta.
+	 * Used for storing order meta for older version of WooCommerce.
+	 *
+	 * @var array.
+	 */
+	private $order_meta = [];
+
+	/**
+	 * Sets $order_meta with post custom values.
+	 *
+	 * @param integer $order_id order id.
+	 * @internal test_wordpress_post_custom.
+	 */
+	public function set_order_meta( $order_id ) {
+		$this->order_meta = get_post_custom( $order_id );
+	}
+
+	/**
+	 * Getter for $order_meta.
+	 *
+	 * @return array post custom values for the order.
+	 */
+	public function get_order_meta() {
+		return $this->order_meta;
+	}
+
+	/**
 	 * Constructor.
 	 */
 	function __construct() {
@@ -83,45 +110,45 @@ class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
 	 */
 	public function init_form_fields() {
 
-		$this->form_fields = [
-			'enabled'		=> [
-				'title'		=> __( 'Enable / Disable', 'woocommerce-gateway-tmt' ),
-				'label'		=> __( 'Enable this payment gateway', 'woocommerce-gateway-tmt' ),
-				'type'		=> 'checkbox',
+		$this->form_fields 	= [
+			'enabled'				=> [
+				'title'			=> __( 'Enable / Disable', 'woocommerce-gateway-tmt' ),
+				'label'			=> __( 'Enable this payment gateway', 'woocommerce-gateway-tmt' ),
+				'type'			=> 'checkbox',
 				'default'		=> 'no',
 			],
-			'title'		=> [
-				'title'		=> __( 'Title', 'woocommerce-gateway-tmt' ),
-				'type'		=> 'text',
+			'title'					=> [
+				'title'			=> __( 'Title', 'woocommerce-gateway-tmt' ),
+				'type'			=> 'text',
 				'desc_tip'	=> __( 'Payment title the customer will see during the checkout process.', 'woocommerce-gateway-tmt' ),
 				'default'		=> __( 'Credit card payment with Trust My Travel', 'woocommerce-gateway-tmt' ),
 			],
-			'cc_css'		=> [
-				'title'		=> __( 'Credit Card Input CSS', 'woocommerce-gateway-tmt' ),
-				'type'		=> 'text',
+			'cc_css'				=> [
+				'title'			=> __( 'Credit Card Input CSS', 'woocommerce-gateway-tmt' ),
+				'type'			=> 'text',
 				'desc_tip'	=> __( 'CSS to use for the Credit Card input.' ),
 				'default'		=> __( 'width:300px;  height:32px; font-size: 14px; outline: none; background-color:#fff; border: 1px solid #bbb; border-radius: 3px; padding:5px;', 'woocommerce-gateway-tmt' ),
 			],
-			'cvv_css'		=> [
-				'title'		=> __( 'CVV Input CSS', 'woocommerce-gateway-tmt' ),
-				'type'		=> 'text',
+			'cvv_css'				=> [
+				'title'			=> __( 'CVV Input CSS', 'woocommerce-gateway-tmt' ),
+				'type'			=> 'text',
 				'desc_tip'	=> __( 'CSS to use for the CVV input.' ),
 				'default'		=> __( 'width:100px;  height:32px; font-size: 14px; outline: none; background-color:#fff; border: 1px solid #bbb; border-radius: 3px; padding:5px;', 'woocommerce-gateway-tmt' ),
 			],
 			'spreedly_env'	=> [
-				'title'		=> __( 'Spreedly Environment Key', 'woocommerce-gateway-tmt' ),
-				'type'		=> 'text',
+				'title'			=> __( 'Spreedly Environment Key', 'woocommerce-gateway-tmt' ),
+				'type'			=> 'text',
 				'desc_tip'	=> __( 'This is the Spreedly Environment Key provided by Trust My Travel.', 'woocommerce-gateway-tmt' ),
 			],
-			'tmt_key'	=> [
-				'title'		=> __( 'Trust My Travel Token', 'woocommerce-gateway-tmt' ),
-				'type'		=> 'password',
+			'tmt_key'				=> [
+				'title'			=> __( 'Trust My Travel Token', 'woocommerce-gateway-tmt' ),
+				'type'			=> 'password',
 				'desc_tip'	=> __( 'This is the API token provided by Trust My Travel.', 'woocommerce-gateway-tmt' ),
 			],
-			'environment'	=> [
-				'title'		=> __( 'Live Mode', 'woocommerce-gateway-tmt' ),
-				'label'		=> __( 'Enable Live Mode', 'woocommerce-gateway-tmt' ),
-				'type'		=> 'checkbox',
+			'environment'		=> [
+				'title'			=> __( 'Live Mode', 'woocommerce-gateway-tmt' ),
+				'label'			=> __( 'Enable Live Mode', 'woocommerce-gateway-tmt' ),
+				'type'			=> 'checkbox',
 				'desc_tip'	=> __( 'Place the payment gateway in live mode.', 'woocommerce-gateway-tmt' ),
 				'default'		=> '',
 			],
@@ -210,6 +237,55 @@ class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
 	}
 
 	/**
+	 * For WooCommerce pre version 3, fetches and compiles order data.
+	 *
+	 * @param  integer $order_id post id.
+	 * @return array           order data.
+	 * @internal test_that_order_data_is_correctly_compiled.
+	 */
+	public function get_order_data( $order_id ) {
+
+		// Set order meta.
+		$this->set_order_meta( $order_id );
+
+		$fields = [
+			'_billing_first_name'			=> '',
+			'_billing_last_name'			=> '',
+			'_billing_email'					=> '',
+			'_billing_address_1'			=> '',
+			'_billing_address_2'			=> '',
+			'_billing_city'						=> '',
+			'_billing_state'					=> '',
+			'_billing_country'				=> '',
+			'_billing_postcode'				=> '',
+			'_billing_phone'					=> '',
+			'_order_currency'					=> '',
+			'_order_total'						=> '',
+		];
+
+		array_walk( $fields, function( &$value, $key ) {
+			$value = ( isset( $this->get_order_meta()[ $key ][0] ) ) ? $this->get_order_meta()[ $key ][0] : '';
+		});
+
+		return [
+			'billing'		=> [
+				'first_name'	=> $fields['_billing_first_name'],
+				'last_name'		=> $fields['_billing_last_name'],
+				'email'				=> $fields['_billing_email'],
+				'address_1'		=> $fields['_billing_address_1'],
+				'address_2'		=> $fields['_billing_address_2'],
+				'city'				=> $fields['_billing_city'],
+				'state'				=> $fields['_billing_state'],
+				'country'			=> $fields['_billing_country'],
+				'postcode'		=> $fields['_billing_postcode'],
+				'phone'				=> $fields['_billing_phone'],
+			],
+			'currency'	=> $fields['_order_currency'],
+			'total'			=> $fields['_order_total'],
+		];
+	}
+
+	/**
 	 * Submit payment.
 	 *
 	 * @param  integer $order_id Order ID.
@@ -219,7 +295,7 @@ class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
 
 		$order = wc_get_order( $order_id );
 
-		$order_data = $order->get_data();
+		$order_data = ( method_exists( $order, 'get_data' ) ) ? $order->get_data() : $this->get_order_data( $order_id );
 
 		// Are we testing right now or is it a real transaction?
 		$url = ( 'yes' === $this->environment ) ? 'https://trustmytravel.com' : 'https://staging.trustmytravel.com';
@@ -230,23 +306,23 @@ class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
 
 		// Declare booking data and assign order values.
 		$booking_data = [
-			'firstname'			=> $order_data['billing']['first_name'],
-			'surname'				=> $order_data['billing']['last_name'],
-			'email'				=> $order_data['billing']['email'],
-			'address'				=> $order_data['billing']['address_1'],
-			'address2'			=> $order_data['billing']['address_2'],
-			'city'				=> $order_data['billing']['city'],
-			'state'				=> $order_data['billing']['state'],
-			'country'				=> $order_data['billing']['country'],
-			'postcode'			=> $order_data['billing']['postcode'],
-			'phone'				=> $order_data['billing']['phone'],
+			'firstname'							=> $order_data['billing']['first_name'],
+			'surname'								=> $order_data['billing']['last_name'],
+			'email'									=> $order_data['billing']['email'],
+			'address'								=> $order_data['billing']['address_1'],
+			'address2'							=> $order_data['billing']['address_2'],
+			'city'									=> $order_data['billing']['city'],
+			'state'									=> $order_data['billing']['state'],
+			'country'								=> $order_data['billing']['country'],
+			'postcode'							=> $order_data['billing']['postcode'],
+			'phone'									=> $order_data['billing']['phone'],
 			'payment_method_token'	=> filter_input( INPUT_POST, 'payment_method_token' ),
-			'date'				=> $line_item_data['start_date'],
-			'date_end'			=> $line_item_data['end_date'],
-			'currency'			=> $order_data['currency'],
-			'total'				=> $order_data['total'],
-			'line_items'			=> implode( ', ', $line_item_data['line_items'] ),
-			'reference'			=> $order_id,
+			'date'									=> $line_item_data['start_date'],
+			'date_end'							=> $line_item_data['end_date'],
+			'currency'							=> $order_data['currency'],
+			'total'									=> $order_data['total'],
+			'line_items'						=> implode( ', ', $line_item_data['line_items'] ),
+			'reference'							=> $order_id,
 		];
 
 		// Test for alternate payment values.
