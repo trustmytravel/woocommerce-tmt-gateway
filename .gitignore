@@ -1,1 +1,6 @@
 node_modules/
+tests/
+bin/
+phpcs.ruleset.xml
+phpunit.xml.dist
+.travis.yml
