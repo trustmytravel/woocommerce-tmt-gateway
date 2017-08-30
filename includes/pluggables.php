@@ -46,7 +46,7 @@ if ( ! function_exists( 'tmt_line_item_data' ) ) :
 		return [
 			'line_items'	=> $line_items,
 			'start_date'	=> date( 'Y-m-d', $start_date ),
-			'end_date'	=> date( 'Y-m-d', $end_date ),
+			'end_date'		=> date( 'Y-m-d', $end_date ),
 		];
 	}
 endif;

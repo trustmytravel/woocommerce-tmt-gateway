@@ -1,26 +1,14 @@
 <?php
 /**
- * Tmt_Payment_Gateway class.
+ * Tmt_Payment_Gateway class to extend WC_Payment_Gateway_CC.
  *
  * @package woocommerce-gateway-tmt.
  */
+
+/**
+ * Tmt_Payment_Gateway class.
+ */
 class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
-
-	/**
-	 * Static property to allow access of class for hooks and filters.
-	 *
-	 * @var object.
-	 */
-	private static $_this;
-
-	/**
-	 * Static method to allow access of class for hooks and filters.
-	 *
-	 * @return object Tmt_Payment_Gateway object.
-	 */
-	static function this() {
-		return self::$_this;
-	}
 
 	/**
 	 * Order meta.
@@ -53,8 +41,6 @@ class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
 	 * Constructor.
 	 */
 	function __construct() {
-
-		self::$_this = $this;
 
 		// The global ID for this Payment method.
 		$this->id = 'tmt';
@@ -92,12 +78,6 @@ class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
 
 		// Lets check for SSL.
 		add_action( 'admin_notices', [ $this, 'do_ssl_check' ] );
-
-		// Thank you page output.
-		add_action( 'woocommerce_thankyou_tmt', [ $this, 'forex_paid' ], 1 );
-
-		// Order page output.
-		add_action( 'woocommerce_order_details_after_order_table', [ $this, 'forex_paid' ] );
 
 		// Save settings.
 		if ( is_admin() ) {
@@ -237,13 +217,51 @@ class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
 	}
 
 	/**
+	 * Order object.
+	 *
+	 * @var object.
+	 */
+	private $order;
+
+	/**
+	 * Wrapper for wc_get_order for easier stubbing and mocking in tests.
+	 *
+	 * @param  integer $order_id post id.
+	 */
+	public function set_order( $order_id ) {
+		$this->order = wc_get_order( $order_id );
+	}
+
+	/**
+	 * Getter for $order.
+	 *
+	 * @return object order object.
+	 */
+	public function get_order() {
+		return $this->order;
+	}
+
+	/**
+	 * Fetches order data.
+	 *
+	 * @param  integer $order_id post id.
+	 * @return array           order data.
+	 * @internal test_that_get_data_method_is_called.
+	 * @internal test_that_order_data_pre_woo_version_three_method_is_called.
+	 */
+	public function get_order_data( $order_id ) {
+		$order = $this->get_order();
+		return ( method_exists( $order, 'get_data' ) ) ? $order->get_data() : $this->order_data_pre_woo_version_three( $order_id );
+	}
+
+	/**
 	 * For WooCommerce pre version 3, fetches and compiles order data.
 	 *
 	 * @param  integer $order_id post id.
 	 * @return array           order data.
 	 * @internal test_that_order_data_is_correctly_compiled.
 	 */
-	public function get_order_data( $order_id ) {
+	public function order_data_pre_woo_version_three( $order_id ) {
 
 		// Set order meta.
 		$this->set_order_meta( $order_id );
@@ -293,9 +311,11 @@ class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
 	 */
 	public function process_payment( $order_id ) {
 
-		$order = wc_get_order( $order_id );
+		// Set order.
+		$this->set_order( $order_id );
 
-		$order_data = ( method_exists( $order, 'get_data' ) ) ? $order->get_data() : $this->get_order_data( $order_id );
+		// Get order data.
+		$order_data = $this->get_order_data( $order_id );
 
 		// Are we testing right now or is it a real transaction?
 		$url = ( 'yes' === $this->environment ) ? 'https://trustmytravel.com' : 'https://staging.trustmytravel.com';
@@ -374,6 +394,8 @@ class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
 				update_post_meta( $order_id, '_tmt_order_total', $payment );
 				update_post_meta( $order_id, '_tmt_order_currency', $currency );
 			}
+
+			$order = $this->get_order();
 
 			// Payment has been successful.
 			$order->add_order_note( $response['response'] );
@@ -506,27 +528,6 @@ class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
 
 		// Return warning.
 		echo '<div class="error"><p>' . sprintf( __( '<strong>Trust My Travel</strong> is enabled and WooCommerce is not forcing the SSL certificate on your checkout page. Please ensure that you have a valid SSL certificate and that you are <a href="%s">forcing the checkout pages to be secured.</a>' ), admin_url( 'admin.php?page=wc-settings&tab=checkout' ) ) . '</p></div>';
-	}
-
-	/**
-	 * Custom hook for the 'woocommerce_thankyou_tmt' and 'woocommerce_order_details_after_order_table' actions.
-	 * Tests if order was paid in non-base currency, and displays payment data if so.
-	 *
-	 * @param  mixes $order integer order_id | object order object.
-	 */
-	public function forex_paid( $order ) {
-
-		$order_id = ( is_integer( $order ) ) ? $order : trim( str_replace( '#', '', $order->get_order_number() ) );
-
-		$alternate_currency = get_post_meta( $order_id, '_tmt_order_currency', true );
-
-		if ( '' === $alternate_currency ) {
-			return;
-		}
-
-		$alternate_payment = get_post_meta( $order_id, '_tmt_order_total', true );
-
-		echo '<p class="woocommerce-notice woocommerce-notice--success woocommerce-thankyou-order-received">' . sprintf( __( 'You paid %1$s %2$s for this order.' ), $alternate_currency, $alternate_payment ) . '</p>' ;
 	}
 
 	/**
