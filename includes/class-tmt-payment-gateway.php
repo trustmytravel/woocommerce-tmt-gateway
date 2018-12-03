@@ -91,45 +91,52 @@ class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
 	public function init_form_fields() {
 
 		$this->form_fields 	= [
-			'enabled'				=> [
+			'enabled'			=> [
 				'title'			=> __( 'Enable / Disable', 'woocommerce-gateway-tmt' ),
 				'label'			=> __( 'Enable this payment gateway', 'woocommerce-gateway-tmt' ),
 				'type'			=> 'checkbox',
 				'default'		=> 'no',
 			],
-			'title'					=> [
+			'title'				=> [
 				'title'			=> __( 'Title', 'woocommerce-gateway-tmt' ),
 				'type'			=> 'text',
-				'desc_tip'	=> __( 'Payment title the customer will see during the checkout process.', 'woocommerce-gateway-tmt' ),
+				'desc_tip'		=> __( 'Payment title the customer will see during the checkout process.', 'woocommerce-gateway-tmt' ),
 				'default'		=> __( 'Credit card payment with Trust My Travel', 'woocommerce-gateway-tmt' ),
 			],
-			'cc_css'				=> [
+			'cc_css'			=> [
 				'title'			=> __( 'Credit Card Input CSS', 'woocommerce-gateway-tmt' ),
 				'type'			=> 'text',
-				'desc_tip'	=> __( 'CSS to use for the Credit Card input.' ),
+				'desc_tip'		=> __( 'CSS to use for the Credit Card input.' ),
 				'default'		=> __( 'width:300px;  height:32px; font-size: 14px; outline: none; background-color:#fff; border: 1px solid #bbb; border-radius: 3px; padding:5px;', 'woocommerce-gateway-tmt' ),
 			],
-			'cvv_css'				=> [
+			'cvv_css'			=> [
 				'title'			=> __( 'CVV Input CSS', 'woocommerce-gateway-tmt' ),
 				'type'			=> 'text',
-				'desc_tip'	=> __( 'CSS to use for the CVV input.' ),
+				'desc_tip'		=> __( 'CSS to use for the CVV input.' ),
 				'default'		=> __( 'width:100px;  height:32px; font-size: 14px; outline: none; background-color:#fff; border: 1px solid #bbb; border-radius: 3px; padding:5px;', 'woocommerce-gateway-tmt' ),
 			],
-			'spreedly_env'	=> [
+			'spreedly_env'		=> [
 				'title'			=> __( 'Spreedly Environment Key', 'woocommerce-gateway-tmt' ),
 				'type'			=> 'text',
-				'desc_tip'	=> __( 'This is the Spreedly Environment Key provided by Trust My Travel.', 'woocommerce-gateway-tmt' ),
+				'desc_tip'		=> __( 'This is the Spreedly Environment Key provided by Trust My Travel.', 'woocommerce-gateway-tmt' ),
 			],
-			'tmt_key'				=> [
+			'tmt_key'			=> [
 				'title'			=> __( 'Trust My Travel Token', 'woocommerce-gateway-tmt' ),
 				'type'			=> 'password',
-				'desc_tip'	=> __( 'This is the API token provided by Trust My Travel.', 'woocommerce-gateway-tmt' ),
+				'desc_tip'		=> __( 'This is the API token provided by Trust My Travel.', 'woocommerce-gateway-tmt' ),
 			],
 			'environment'		=> [
 				'title'			=> __( 'Live Mode', 'woocommerce-gateway-tmt' ),
 				'label'			=> __( 'Enable Live Mode', 'woocommerce-gateway-tmt' ),
 				'type'			=> 'checkbox',
-				'desc_tip'	=> __( 'Place the payment gateway in live mode.', 'woocommerce-gateway-tmt' ),
+				'desc_tip'		=> __( 'Place the payment gateway in live mode.', 'woocommerce-gateway-tmt' ),
+				'default'		=> '',
+			],
+			'no_default_to_base'	=> [
+				'title'			=> __( 'Default to Base Currency', 'woocommerce-gateway-tmt' ),
+				'label'			=> __( 'Do not default to base currency', 'woocommerce-gateway-tmt' ),
+				'type'			=> 'checkbox',
+				'desc_tip'		=> __( 'Force user to select a currency rather than defaulting to base currency.', 'woocommerce-gateway-tmt' ),
 				'default'		=> '',
 			],
 		];
@@ -190,7 +197,8 @@ class Tmt_Payment_Gateway extends WC_Payment_Gateway_CC {
 			return;
 		}
 
-		$options = '<option value= "">' . $base_currency . ' ' . $amount . '</option>';
+		$options = ( 'yes' === $this->no_default_to_base ) ? '<option value="nosubmit" selected="selected">--Select Payment Currency--</option>' : '';
+		$options .= '<option value="">' . $base_currency . ' ' . $amount . '</option>';
 
 		// If we don't have the currency, we get a 404.
 		if ( '404' === wp_remote_retrieve_response_code( $response ) ) {

@@ -101,6 +101,22 @@
 			// Remove old errors.
 			$( '.woocommerce-error' ).remove();
 
+			var paymentValue = $( '#tmt-alternate_payment' ).val();
+
+			if ( 'nosubmit' === paymentValue ) {
+				
+				// Show the errors on the form.
+				var $form  = $( 'form.checkout' );
+
+				$form.prepend( '<ul class="woocommerce-error"><li>You must select a payment currency</li></ul>' );
+
+				$( 'html, body' ).animate({
+					scrollTop: ( $form.offset().top - 100 )
+				}, 2000);
+
+				return false;
+			}
+
 			return tmtFormHandler();
 		});
 
