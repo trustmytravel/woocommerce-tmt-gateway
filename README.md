@@ -44,6 +44,9 @@ Trust My Travel API Token. To be supplied by Trust My Travel.
 **Live Mode**<br />
 Tick to process live bookings, leave unchecked to work in sandbox mode and work with test credit card data.
 
+**Default to Base Currency**<br />
+By default, your payment page will show prices in the currency of your WooCommerce store. Users can then pick from a dropdown list of other currencies if they wish to pay in a currency other than your store currency. If you want to force users to select a currency rather than giving them a default, tick this box.
+
 ## Code Examples ##
 
 ### TMT Action: `tmt_woo_credit_card_form_info` ###
