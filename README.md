@@ -104,6 +104,8 @@ function tmt_line_item_data() {
 If any of the required fields are missing from the returned array, an exception will be thrown.
 For full details on the validation applied to the line item array, refer to the `parse_tmt_line_item_data` method in the `Tmt_Payment_Gateway` class.
 
+Alternatively you can use our [TMT WooCommerce Pluggables MU Plugin](https://github.com/trustmytravel/tmt-woocommerce-pluggables)
+
 ### Woo Action: `woocommerce_tmt_after_successful_payment` ###
 Whenever an MCP booking occurs, the total is stored to the post_meta field `_tmt_order_total` and the currency is stored to the post_meta field `_tmt_order_currency`. The `woocommerce_thankyou_tmt` and `woocommerce_order_details_after_order_table` actions are then hooked to display to the user what currency and total they paid underneath the order details (see below for details on removing these).
 
